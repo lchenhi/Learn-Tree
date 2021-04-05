@@ -1,0 +1,339 @@
+#include<iostream>
+using namespace std;
+
+typedef int ElemType;
+typedef struct BiNode {
+	ElemType data;
+	struct BiNode *lchild, *rchild;
+}BiNode,*BiTree;
+
+
+BiNode* newNode(ElemType e) {
+	BiNode *newNode = (BiNode*)malloc(sizeof(BiNode));
+	newNode->data = e;
+	newNode->lchild = NULL;
+	newNode->rchild = NULL;
+	return newNode;
+}
+
+//二叉树的深度
+int treeDepth(BiTree tree) {
+	if (tree == NULL) {
+		return 0;
+	}
+	else {
+		int l = treeDepth(tree->lchild);
+		int r = treeDepth(tree->rchild);
+		return l > r ? l + 1: r + 1;
+	}
+}
+
+
+//遍历
+void visit(BiNode *p) {
+	printf("%d", p->data);
+}
+
+//先序遍历
+void PreOrder(BiTree T) {
+	if (T != NULL) {
+		visit(T);
+		PreOrder(T->lchild);
+		PreOrder(T->rchild);
+	}
+	
+}
+//中序遍历
+void InOrder(BiTree T) {
+	if (T != NULL) {
+		InOrder(T->lchild);
+		visit(T);
+		InOrder(T->rchild);
+	}
+	
+}
+//后序遍历
+void PostOrder(BiTree T) {
+	if (T != NULL) {
+		PostOrder(T->lchild);
+		PostOrder(T->rchild);
+		visit(T);
+	}
+	
+}
+//层次遍历
+#define MAXSIZE 255
+typedef struct {
+	BiTree data[MAXSIZE];
+	int front, rear;
+}Queue;//借助队列实现层序遍历，1先让根结点入队。2然后出队，访问出队结点。
+							//3若它有左子树，则将左子树根节点入队。
+							//4若它有右子树，则将右子树根节点入队。然后出队，访问出队结点
+Queue InitQueue(Queue &Q) {
+	Q.front = Q.rear = 0;
+	return Q;
+}
+void EnQueue(Queue &Q, BiTree e) {
+	if ((Q.rear + 1) % MAXSIZE == Q.front) return;//队列满
+		Q.data[Q.rear] = e;
+		Q.rear = (Q.rear + 1) % MAXSIZE;	
+}
+BiTree DeQueue(Queue &Q) {	
+	BiTree tree = Q.data[Q.front];
+	Q.front = (Q.front + 1) % MAXSIZE;
+	return tree;
+}
+BiTree getRear(Queue Q) {
+	return Q.data[Q.rear -1];
+}
+int LevelOrder(BiTree tree,Queue &Q) {//返回最后一个结点的位置
+	int value = 0;
+	if (tree != NULL) {
+		EnQueue(Q,tree);
+		BiNode * node = DeQueue(Q);
+		visit(node);
+		value = node->data;
+		if (node->lchild != NULL) {
+			EnQueue(Q, node->lchild);
+		}
+		if (node->rchild != NULL) {
+			EnQueue(Q, node->rchild);
+		}
+		while (Q.front != Q.rear) {
+			node = DeQueue(Q);
+			visit(node);
+			value = node->data;
+			if (node->lchild != NULL) {
+				EnQueue(Q, node->lchild);
+			}
+			if (node->rchild != NULL) {
+				EnQueue(Q, node->rchild);
+			}
+		}
+	}
+	return value;
+
+}
+
+BiTree findParent(BiTree tree,int site) {//层序遍历，找到双亲
+	Queue Q = InitQueue(Q);
+	if (tree != NULL) {
+		EnQueue(Q, tree);
+		BiNode * node = DeQueue(Q);
+		
+		if (site == node->data) return node;
+		if (node->lchild != NULL) EnQueue(Q, node->lchild);
+		if (node->rchild != NULL) EnQueue(Q, node->rchild);
+
+		while (Q.front != Q.rear) {
+			node = DeQueue(Q);
+			if (site == node->data) return node;
+			if (node->lchild != NULL) EnQueue(Q, node->lchild);
+			if (node->rchild != NULL) EnQueue(Q, node->rchild);
+		}
+	}
+	return NULL;
+}
+
+//完全二叉树的创建
+
+bool addNode(BiTree &tree, ElemType E) {
+	if (NULL == tree) {//如果是空树则插入根节点
+		tree = newNode(E);
+		return true;
+	}
+	else {
+		//不是空树，找到对应的位置插入
+		Queue Q = InitQueue(Q);
+		//根据最后一个结点的位置，和树的高度计算出要插入的位置
+		int value = LevelOrder(tree, Q);
+		int k = treeDepth(tree);
+		int num = 1;//高为k的树，最多有多少个结点
+		int num2 = 0;//高为k-1的树最多有多少个结点
+		for (int i = 1; i < k; i++) {
+			if (i == k - 1) num2 = num;
+			num += 2 * i;
+		}
+		int site = 0;
+		if (k == num) {
+			//k为该层的最后一个节点,应该给本层的第一个结点添加左子节点
+			site = num2 + 1;
+			BiNode* node = findParent(tree, site);
+			node->lchild = newNode(E);
+			return true;
+		}
+		//k不是本层的最后一个结点
+		
+		if (value % 2 == 0) {
+			//是左子树
+			site = value / 2;//site为双亲的编号
+			BiNode* node = findParent(tree, site);
+			node->rchild = newNode(E);
+			return true;
+		}
+		else {
+			//是右子树
+			site = (value / 2) + 1;//site为双亲右兄弟的编号
+			BiNode* node = findParent(tree, site);
+			node->lchild = newNode(E);
+			return true;
+		}
+	}
+	
+	return 1;
+}
+
+typedef struct {
+	BiTree stack[MAXSIZE];
+	int top = -1;
+}SqStack;
+
+void Push(SqStack &S, BiTree Node) {
+	if (Node) {
+		S.stack[++S.top] = Node;
+	}
+}
+
+BiTree Pop(SqStack &S) {
+	if (S.top == -1) return NULL;
+	return  S.stack[S.top--];
+	
+}
+
+BiTree getTop(SqStack S) {
+	return S.stack[S.top];
+}
+
+void PreOrderTraverse(BiTree tree) { 
+	SqStack s1;//保存结点信息，栈底元素为当前树的根节点
+	Queue Q = InitQueue(Q);//保存先序遍历序列
+	BiTree T = tree;
+	BiTree temp = NULL;
+	while (T || s1.top != -1) {
+		if (T) {
+			Push(s1, T);
+			EnQueue(Q, T);
+			T = T->lchild;
+		}
+		else {
+			temp = Pop(s1);
+			if (!temp->rchild) {
+				continue;//没有右孩子则，temp指向该结点的双亲结点
+			}
+			else {	
+				if (s1.top == -1) {//有右孩子，则判断是否是根节点
+					T = temp->rchild;		
+				}
+				else {
+					EnQueue(Q, temp->rchild);
+
+				}
+			}
+		}
+	}
+	while (Q.front != Q.rear) {
+		BiTree fi =  DeQueue(Q);
+		cout << fi->data;
+	}
+
+}
+
+void InOrderTraverse(BiTree tree) {
+	BiTree T = tree;
+	SqStack S;
+	BiTree temp = NULL;
+	while (T || S.top != -1) {
+		if (T) {
+			Push(S, T);
+			;
+			T = T->lchild;
+		}
+		else {
+			temp = Pop(S);
+			cout << temp->data;
+			T = temp->rchild;
+		}
+	}
+}
+
+void PostOrderTraverse(BiTree tree) {
+	//后序遍历的非递归实现比较麻烦，可以通过逆后序遍历序列（根右左）的到后序遍历序列
+	SqStack s1;//保存结点信息，栈底元素为当前树的根节点
+	Queue Q = InitQueue(Q);//保存先序遍历序列
+	BiTree T = tree;
+	BiTree temp = NULL;
+	while (T || s1.top != -1) {
+		if (T) {
+			Push(s1, T);
+			EnQueue(Q, T);
+			T = T->rchild;
+		}
+		else {
+			temp = Pop(s1);
+			if (!temp->lchild) {
+				continue;//没有右孩子则，temp指向该结点的双亲结点
+			}
+			else {
+				if (s1.top == -1) {//有右孩子，则判断是否是根节点
+					T = temp->lchild;
+				}
+				else {
+					EnQueue(Q, temp->lchild);
+
+				}
+			}
+		}
+	}
+	SqStack s2;
+	while (Q.front != Q.rear) {
+		BiTree fi = DeQueue(Q);
+		Push(s2, fi);
+	}
+	while (s2.top != -1) {
+		BiTree hou = Pop(s2);
+		cout << hou->data;
+	}
+}
+
+void test() {
+	BiTree tree = NULL;
+	for (int i = 1; i <= 7; i++) {
+		addNode(tree, i);
+	}
+	cout << "" << endl;
+	cout << "层次遍历的结果为";
+	Queue Q = InitQueue(Q);
+	LevelOrder(tree,Q);
+	cout << "" << endl;
+
+	cout << "先序遍历的结果为";
+	PreOrder(tree);
+	cout<<""<<endl;
+
+	cout << "先序遍历非递归的结果为";
+	PreOrderTraverse(tree);
+	cout << "" << endl;
+
+	cout << "中序遍历的结果为";
+	InOrder(tree);
+	cout << "" << endl;
+
+	cout << "中序遍历非递归的结果为";
+	InOrderTraverse(tree);
+	cout << "" << endl;
+
+	cout << "后序遍历的结果为";
+	PostOrder(tree);
+	cout << "" << endl;
+
+	cout << "后序遍历非递归的结果为";
+	PostOrderTraverse(tree);
+	cout << "" << endl;
+
+}
+
+int main() {
+	test();
+	system("pause");
+	return 0;
+}
