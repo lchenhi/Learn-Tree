@@ -1,0 +1,71 @@
+#include<iostream>
+using namespace std;
+typedef char ElemType;
+typedef struct BiNode {
+	ElemType data;
+	struct BiNode *lchild, *rchild;
+}BiNode, *BiTree;
+
+//由遍历序列构造二叉树
+//已知先序序列：ABCDEFGHI 中序序列：BCAEDGHFI  构造二叉树
+
+int find(char arr[], ElemType e) {
+	for (int i = 0; i < sizeof(arr) / sizeof(arr[0]); i++) {
+		if (arr[i] == e) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+BiNode* newNode(ElemType e) {
+	BiNode *newNode = (BiNode*)malloc(sizeof(BiNode));
+	newNode->data = e;
+	newNode->lchild = NULL;
+	newNode->rchild = NULL;
+	return newNode;
+}
+
+BiTree createBiTree(char* q, char* z, int size) {//size为中序长度，当size<1时说明该结点为空//
+	if (size < 1)return NULL;
+	BiTree p = (BiTree)malloc(sizeof(BiNode));
+	p->data = q[0];//每次前序的第一个为结点//
+	int f = 0;//f来计算左子树的结点数//
+	while (z[f] != p->data)f++;//计算左子树结点数//
+	int r = size - f - 1;//当前中序长度减去左子树长度再减去根节点为右结点数//
+	p->lchild = createBiTree(q + 1, z, f);//创建左子树，中序指针++ 从根节点的左边依次创建
+	p->rchild = createBiTree(q + f + 1, z + f + 1, r);//创建右子树  中序指针从根节点的右边++依次创建
+	return p;
+}
+
+void visit(BiNode *p) {
+	printf("%c", p->data);
+}
+
+//先序遍历
+void PreOrder(BiTree T) {
+	if (T != NULL) {
+		visit(T);
+		PreOrder(T->lchild);
+		PreOrder(T->rchild);
+	}
+
+}
+
+int num(BiTree tree) {
+	if (!tree) return 0;
+	int l = num(tree->lchild);
+	int r = num(tree->rchild);
+	return l + r + 1;
+}
+
+int main() {
+	char preOrder[] = { 'A','B','C','D','E','F','G','H','I' };
+	char inOrder[] = { 'B','C','A','E','D','G','H','F','I' };
+	BiTree tree = createBiTree(preOrder, inOrder, 8);;
+	
+	int temp = 0;
+	cout << num(tree) << endl;
+	PreOrder(tree);
+	system("pause");
+	return 0;
