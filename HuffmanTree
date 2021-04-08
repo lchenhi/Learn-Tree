@@ -1,0 +1,100 @@
+#include<iostream>
+using namespace std;
+//顺序存储比较简单，采用一维结构数组
+typedef struct {
+	int weight;
+	int parent, lch, rch;
+
+}HTNode,*HuffmanTree;
+//哈夫曼数总共有2n-1个结点，不使用0下标，数组大小为2n
+
+void findMinW(HuffmanTree tree,int length,int &min1,int &min2,int &indexm1,int &indexm2) {
+//	找权值最小的 两个数
+	min1 = 10000;
+	min2 = 10000;
+	int temp = 0;
+	int tag = 0;//标记min1
+	for (int i = 1; i <= length; i++) {
+		if (tree[i].parent == 0) {//有父节点就不再是根结点了
+			if (min1 > tree[i].weight) {
+				temp = min1;
+				min1 = tree[i].weight;
+				indexm1 = i;
+				tag = i;//标记最小的数的下标
+			}	
+		}
+	}
+	for (int i = 1; i <= length; i++) {
+		if (tree[i].parent == 0) {
+			if (tag != i) {//这个数是min1
+				if (min2 > tree[i].weight) {
+					temp = min2;
+					min2 = tree[i].weight;
+					indexm2 = i;
+				}
+			
+			}
+		
+		}
+	}
+
+}
+
+void InitHuffmanTree(HuffmanTree &H,int n ) {
+
+	H[0].weight =  0;
+	H[0].lch = 0;
+	H[0].rch = 0;
+	H[0].parent = 0;
+	//初始叶子结点
+	for (int i = 1; i <= n; i++) {
+		cin >> H[i].weight; //输入叶子结点权重
+		H[i].lch = 0;
+		H[i].rch = 0;
+		H[i].parent = 0;
+	}
+	for (int i = n+1; i <= 15; i++) {
+		H[i].weight = 0;
+		H[i].lch = 0;
+		H[i].rch = 0;
+		H[i].parent = 0;
+	}
+}
+
+
+void printHT(HuffmanTree tree) {
+	cout << "权值\t" << "双亲\t" << "左孩子\t" << "右孩子\t" << endl;
+	int i = 0;
+	while (i < 16) {
+		cout << tree[i].weight << "\t" << tree[i].parent << "\t" << tree[i].lch << "\t" << tree[i].rch << endl;
+		i++;
+	}
+}
+
+void createHT(HuffmanTree &H,int n) {//n为结点数
+	
+	int min1 = 0;//保存最小权值
+	int min2 = 0;
+	int indexm1 = 0;//保存左右孩子下标
+	int indexm2 = 0;
+	for (int i = n + 1; i <= 2*n - 1; i++) {
+		//找到两个最小的权值的结点
+		findMinW(H, i - 1, min1, min2,indexm1,indexm2);
+		H[i].weight = min1 + min2;
+		H[indexm1].parent = i;//这俩个结点不再是根节点了
+		H[indexm2].parent = i;
+		H[i].lch = indexm1;
+		H[i].rch = indexm2;
+	
+	}
+}
+
+
+int main() {
+	HuffmanTree H= new HTNode[2 * 8 - 1];
+	InitHuffmanTree(H, 8);
+	createHT(H, 8);
+	printHT(H);
+	system("pause");
+	return 0;
+}
