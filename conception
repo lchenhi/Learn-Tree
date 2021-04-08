@@ -1,0 +1,69 @@
+#include<iostream>
+using namespace std;
+typedef char ElemType;
+#define MAXSIZE 100
+//双亲表示法
+typedef struct {
+	ElemType data;
+	int parent;
+}PTNode;
+typedef struct {
+	PTNode node[MAXSIZE];
+	int sum;//节点数
+}PTree;
+
+
+//孩子(链表)表示法(二叉树表示法，二叉链表表示法)
+typedef struct CTNode{
+	int child;//孩子结点下标的位子
+	struct CTNode *next;//下一个孩子的地址
+}*ChildPtr;//孩子结点
+typedef struct {
+	ElemType data;
+	ChildPtr firstchild;//孩子链表的头指针
+}CTBox;//双亲结点结构
+typedef struct {
+	CTBox node[MAXSIZE];
+	int n, r;//节点数和根结点位子
+}CTree;
+	   
+	   
+	   
+	   
+	   
+//孩子兄弟表示法
+typedef struct CSNode{
+	ElemType data;
+	int parent;
+	struct CSNode *firstchild, *nextsibling;//第一个孩子和右兄弟指针
+}CSNode,*CSTree;
+
+typedef struct BiNode {
+	ElemType data;
+	struct BiNode *lchild, *rchild;
+	int ltag, rtag;//ltag或rtag为0说明指向孩子，ltag为1指向前驱，rtag为1说明指向后继,ltag和rtag可用bool类型代替节省空间
+}BiNode, *BiTree;
+
+//线索二叉树
+//如果某个结点的左孩子为空，则将空的左孩子指针域指向其前驱
+//如果某个结点的右孩子为空，则将空的右孩子指针域指向其后继
+//对二叉树按某种遍历次序成为线索二叉树的过程叫线索化 
+
+int find(char arr[], ElemType e) {
+	for (int i = 0; i < sizeof(arr) / sizeof(arr[0]); i++) {
+		if (arr[i] == e) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+BiNode* newNode(ElemType e) {
+	BiNode *newNode = (BiNode*)malloc(sizeof(BiNode));
+	newNode->data = e;
+	newNode->lchild = NULL;
+	newNode->rchild = NULL;
+	newNode->ltag = -1;
+	newNode->rtag = -1;
+	return newNode;
+}
